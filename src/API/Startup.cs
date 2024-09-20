@@ -11,6 +11,8 @@ public class Startup(IConfiguration configuration)
         services.AddCustomControllers();
         services.AddCustomAuthentication(configuration["Jwt:Secret"]);
         services.AddCustomCaching();
+        services.AddCustomCQRS();
+        services.AddCustomDomainServices();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

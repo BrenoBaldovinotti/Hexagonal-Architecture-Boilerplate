@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Application.Commands;
+using Domain.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
@@ -60,6 +61,22 @@ public static class ServiceExtensions
     public static IServiceCollection AddCustomControllers(this IServiceCollection services)
     {
         services.AddControllers();
+        return services;
+    }
+
+    // Register MediatR and CQRS Handlers
+    public static IServiceCollection AddCustomCQRS(this IServiceCollection services)
+    {
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
+
+        return services;
+    }
+
+    // Register Domain Services
+    public static IServiceCollection AddCustomDomainServices(this IServiceCollection services)
+    {
+        services.AddScoped<OrderService>();
+
         return services;
     }
 }
