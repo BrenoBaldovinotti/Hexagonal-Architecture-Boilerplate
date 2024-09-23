@@ -1,33 +1,52 @@
 ﻿using Application.DTOs;
 using Domain.Repositories;
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Queries.Handlers;
 
-public class GetOrderByIdQueryHandler(IOrderRepository orderRepository) : IRequestHandler<GetOrderByIdQuery, OrderDto>
+public class GetOrderByIdQueryHandler(
+    IOrderRepository orderRepository, 
+    IMemoryCache cache, 
+    ILogger<GetOrderByIdQueryHandler> logger) : IRequestHandler<GetOrderByIdQuery, OrderDto?>
 {
-    public async Task<OrderDto> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
+    private readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(10);
+
+    public async Task<OrderDto?> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
     {
-        var order = await orderRepository.GetByIdAsync(request.OrderId);
-        if (order == null)
+        var cacheKey = $"Order_{request.OrderId}";
+
+        if (!cache.TryGetValue(cacheKey, out OrderDto? cachedOrder))
         {
-            throw new KeyNotFoundException($"Order with ID {request.OrderId} not found.");
+            logger.LogInformation("Cache miss for Order {OrderId}, fetching from database.", request.OrderId);
+            var order = await orderRepository.GetByIdAsync(request.OrderId);
+
+            if (order != null)
+            {
+                cachedOrder = new OrderDto
+                {
+                    Id = order.Id,
+                    CustomerName = order.CustomerName,
+                    Items = order.Items.Select(item => new OrderItemDto
+                    {
+                         ProductName = item.ProductName,
+                         UnitPrice = item.UnitPrice,
+                         Quantity = item.Quantity,
+                    }).ToList(),
+                    OrderDate = order.OrderDate,
+                    TotalAmount = order.TotalAmount
+                };
+
+                cache.Set(cacheKey, cachedOrder, _cacheDuration);
+                logger.LogInformation("Order {OrderId} cached.", request.OrderId);
+            }
+        }
+        else
+        {
+            logger.LogInformation("Cache hit for Order {OrderId}.", request.OrderId);
         }
 
-        var orderDto = new OrderDto
-        {
-            Id = order.Id,
-            CustomerName = order.CustomerName,
-            OrderDate = order.OrderDate,
-            TotalAmount = order.TotalAmount,
-            Items = order.Items.Select(i => new OrderItemDto
-            {
-                ProductName = i.ProductName,
-                UnitPrice = i.UnitPrice,
-                Quantity = i.Quantity
-            }).ToList()
-        };
-
-        return orderDto;
+        return cachedOrder;
     }
 }

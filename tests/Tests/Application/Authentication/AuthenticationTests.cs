@@ -13,7 +13,7 @@ public class AuthenticationTests(WebApplicationFactory<Program> factory) : IClas
     public async Task Test_AuthenticatedRequest_WithValidJwt_ReturnsSuccess()
     {
         // Arrange
-        var token = JwtTokenGenerator.GenerateToken("your-secret-key", "your-app-name", "your-app-audience");
+        var token = JwtTokenGenerator.GenerateToken("your-very-strong-secret-key", "your-app-name", "your-app-audience");
 
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 

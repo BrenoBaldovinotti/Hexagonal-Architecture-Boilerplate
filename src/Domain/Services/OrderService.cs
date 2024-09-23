@@ -1,9 +1,10 @@
 ﻿using Domain.Entities;
 using FluentValidation;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Domain.Services;
 
-public class OrderService(IValidator<Order> orderValidator, IValidator<OrderItem> orderItemValidator)
+public class OrderService(IValidator<Order> orderValidator, IValidator<OrderItem> orderItemValidator, IMemoryCache cache)
 {
     public void PlaceOrder(Order order)
     {

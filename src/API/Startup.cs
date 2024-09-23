@@ -1,5 +1,6 @@
 ﻿using API._Extensions;
 using API.Middlewares;
+using Serilog;
 
 namespace API;
 
@@ -45,6 +46,8 @@ public class Startup(IConfiguration configuration)
             app.UseExceptionHandler("/Home/Error");
             app.UseHsts();
         }
+
+        app.UseSerilogRequestLogging();
 
         app.UseHttpsRedirection();
         app.UseRouting();

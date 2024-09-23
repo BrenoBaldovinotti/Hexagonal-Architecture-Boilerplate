@@ -16,7 +16,8 @@ public static class JwtTokenGenerator
         {
                 new Claim(JwtRegisteredClaimNames.Sub, "test-user-id"),
                 new Claim(JwtRegisteredClaimNames.Email, "test@example.com"),
-                new Claim(ClaimTypes.Role, "Admin")            };
+                new Claim(ClaimTypes.Role, "Admin")
+        };
 
         var token = new JwtSecurityToken(issuer,
           audience,
