@@ -1,4 +1,5 @@
 ﻿using Application.DTOs;
+using Domain.Repositories;
 using MediatR;
 
 namespace Application.Queries.Handlers;

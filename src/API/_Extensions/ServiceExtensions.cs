@@ -1,9 +1,14 @@
-﻿using Application.Commands;
+﻿using Domain.Entities;
 using Domain.Services;
+using Domain.Validators;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
+using Swashbuckle;
+using Microsoft.OpenApi.Models;
 
 namespace API._Extensions;
 
@@ -45,6 +50,53 @@ public static class ServiceExtensions
                 ValidateIssuer = false,
                 ValidateAudience = false
             };
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddSwagger(this IServiceCollection services)
+    {
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Version = "v1",
+                Title = "Hexagonal Architecture API",
+                Description = "API Documentation for the Hexagonal Architecture Boilerplate",
+                Contact = new OpenApiContact
+                {
+                    Name = "Breno Baldovinotti",
+                    Email = "brenobaldovinotti@gmail.com"
+                }
+            });
+        });
+
+        return services;
+    }
+
+    // Add FluentValidation and Validators
+    public static IServiceCollection AddCustomFluentValidation(this IServiceCollection services)
+    {
+        services.AddFluentValidationAutoValidation();
+
+        services.AddScoped<IValidator<Order>, OrderValidator>();
+        services.AddScoped<IValidator<OrderItem>, OrderItemValidator>();
+
+        return services;
+    }
+
+    // Extension method to add CORS
+    public static IServiceCollection AddCustomCORS(this IServiceCollection services)
+    {
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAllOrigins",
+                builder =>
+                {
+                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                });
         });
 
         return services;

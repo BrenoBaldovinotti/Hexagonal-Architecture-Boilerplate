@@ -1,4 +1,6 @@
-﻿namespace API._Extensions;
+﻿using API.Middlewares;
+
+namespace API._Extensions;
 
 public static class AppExtensions
 {
@@ -20,6 +22,18 @@ public static class AppExtensions
         app.UseStaticFiles();
 
         app.UseRouting();
+
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hexagonal Architecture API v1");
+            c.RoutePrefix = string.Empty;
+        });
+
+        app.UseMiddleware<GlobalExceptionMiddleware>();
+        app.UseMiddleware<ValidationErrorMiddleware>();
+
+        app.UseCors("AllowAllOrigins");
 
         app.UseAuthentication();
         app.UseAuthorization();
