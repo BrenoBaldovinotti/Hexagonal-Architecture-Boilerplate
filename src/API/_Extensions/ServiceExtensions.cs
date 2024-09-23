@@ -7,29 +7,33 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
-using Swashbuckle;
 using Microsoft.OpenApi.Models;
+using Application.Security.AuthorizationHandlers;
+using Application.Security.Requirements;
+using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 
 namespace API._Extensions;
 
 public static class ServiceExtensions
 {
-    // Extension method to configure Serilog
     public static IServiceCollection AddCustomLogging(this IServiceCollection services)
     {
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
             .CreateLogger();
-
         return services;
     }
 
-    // Extension method to add JWT Authentication
-    public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, string? jwtSecret)
+    public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        if (string.IsNullOrEmpty(jwtSecret))
+        var jwtSecret = configuration["Jwt:Key"];
+        var jwtIssuer = configuration["Jwt:Issuer"];
+        var jwtAudience = configuration["Jwt:Audience"];
+
+        if (string.IsNullOrEmpty(jwtSecret) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
         {
-            throw new ArgumentNullException(nameof(jwtSecret), "JWT Secret key is not configured.");
+            throw new ArgumentNullException(nameof(jwtSecret), "JWT is not configured.");
         }
 
         var key = Encoding.ASCII.GetBytes(jwtSecret);
@@ -45,17 +49,40 @@ public static class ServiceExtensions
             options.SaveToken = true;
             options.TokenValidationParameters = new TokenValidationParameters
             {
+                ValidateIssuer = true,
+                ValidateAudience = true,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = false,
-                ValidateAudience = false
+                ValidIssuer = jwtIssuer,
+                ValidAudience = jwtAudience,
+                IssuerSigningKey = new SymmetricSecurityKey(key)
             };
         });
 
         return services;
     }
 
-    public static IServiceCollection AddSwagger(this IServiceCollection services)
+    public static IServiceCollection AddCustomAuthorization(this IServiceCollection services)
+    {
+        services.AddSingleton<IAuthorizationHandler, RoleAuthorizationHandler>();
+
+        services.AddAuthorizationBuilder().AddPolicy("AdminPolicy", policy => policy.Requirements.Add(new RoleRequirement("Admin")));
+
+        return services;
+    }
+
+    public static IServiceCollection AddCustomVersioning(this IServiceCollection services)
+    {
+        services.AddApiVersioning(options =>
+        {
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.ReportApiVersions = true;
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddCustomSwagger(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
@@ -76,59 +103,48 @@ public static class ServiceExtensions
         return services;
     }
 
-    // Add FluentValidation and Validators
     public static IServiceCollection AddCustomFluentValidation(this IServiceCollection services)
     {
         services.AddFluentValidationAutoValidation();
-
         services.AddScoped<IValidator<Order>, OrderValidator>();
         services.AddScoped<IValidator<OrderItem>, OrderItemValidator>();
 
         return services;
     }
 
-    // Extension method to add CORS
     public static IServiceCollection AddCustomCORS(this IServiceCollection services)
     {
         services.AddCors(options =>
         {
-            options.AddPolicy("AllowAllOrigins",
-                builder =>
-                {
-                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-                });
+            options.AddPolicy("AllowAllOrigins", builder =>
+            {
+                builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+            });
         });
-
         return services;
     }
 
-    // Extension method to add memory caching
-    public static IServiceCollection AddCustomCaching(this IServiceCollection services)
-    {
-        services.AddMemoryCache();
-        return services;
-    }
-
-    // Extension method to configure MVC Controllers
     public static IServiceCollection AddCustomControllers(this IServiceCollection services)
     {
         services.AddControllers();
         return services;
     }
 
-    // Register MediatR and CQRS Handlers
-    public static IServiceCollection AddCustomCQRS(this IServiceCollection services)
+    public static IServiceCollection AddCustomCaching(this IServiceCollection services)
     {
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
-
+        services.AddMemoryCache();
         return services;
     }
 
-    // Register Domain Services
+    public static IServiceCollection AddCustomCQRS(this IServiceCollection services)
+    {
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
+        return services;
+    }
+
     public static IServiceCollection AddCustomDomainServices(this IServiceCollection services)
     {
         services.AddScoped<OrderService>();
-
         return services;
     }
 }

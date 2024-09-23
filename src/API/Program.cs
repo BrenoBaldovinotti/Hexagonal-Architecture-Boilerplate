@@ -1,13 +1,22 @@
-using API;
+namespace API;
 
-var builder = WebApplication.CreateBuilder(args);
+public class Program
+{
+    public static void Main(string[] args)
+    {
+		try
+		{
+			CreateHostBuilder(args).Build().Run();
+		}
+		catch (Exception ex)
+		{
+			throw;
+		}
+    }
 
-var startup = new Startup(builder.Configuration);
-
-startup.ConfigureServices(builder.Services);
-
-var app = builder.Build();
-
-startup.Configure(app);
-
-app.Run();
+	public static IHostBuilder CreateHostBuilder(string[] args) =>
+		Host.CreateDefaultBuilder(args).ConfigureWebHostDefaults(webBuilder => 
+		{ 
+			webBuilder.UseStartup<Startup>(); 
+		});
+}

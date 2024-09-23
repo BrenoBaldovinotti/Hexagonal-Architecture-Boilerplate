@@ -1,27 +1,61 @@
 ﻿using API._Extensions;
-using Microsoft.Extensions.Configuration;
+using API.Middlewares;
 
 namespace API;
 
 public class Startup(IConfiguration configuration)
 {
-    // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddCustomLogging();
-        services.AddCustomCORS();
         services.AddCustomControllers();
-        services.AddCustomAuthentication(configuration["Jwt:Secret"]);
+        services.AddCustomSwagger();
+        services.AddCustomAuthentication(configuration);
+        services.AddCustomAuthorization();
+        services.AddCustomVersioning();
+        services.AddCustomLogging();
+
+        services.AddHealthChecks();
+        
         services.AddCustomFluentValidation();
+        
+        services.AddCustomCORS();
         services.AddCustomCaching();
+        
         services.AddCustomCQRS();
+
         services.AddCustomDomainServices();
         services.AddCustomInfrastructure(configuration);
+        
     }
 
-    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    public void Configure(IApplicationBuilder app)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        app.UseCustomPipeline();
+        // Global exception handling middleware
+        app.UseMiddleware<GlobalExceptionMiddleware>();
+        app.UseMiddleware<ValidationErrorMiddleware>();
+
+        if (env.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+            app.UseDeveloperExceptionPage();
+        }
+        else
+        {
+            app.UseExceptionHandler("/Home/Error");
+            app.UseHsts();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseRouting();
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.UseCors("AllowAllOrigins");
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+            endpoints.MapHealthChecks("/health");
+        });
     }
 }
