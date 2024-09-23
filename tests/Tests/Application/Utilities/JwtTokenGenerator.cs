@@ -25,6 +25,16 @@ public static class JwtTokenGenerator
           expires: DateTime.Now.AddMinutes(expireMinutes),
           signingCredentials: credentials);
 
+        try
+        {
+            var asd = new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 

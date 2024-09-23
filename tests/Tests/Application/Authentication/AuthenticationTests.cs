@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
+﻿using API;
+using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http.Headers;
 using Tests.Application.Utilities;
 
 namespace Tests.Application.Authentication;
 
-public class AuthenticationTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class AuthenticationTests(WebApplicationFactory<Startup> factory) : IClassFixture<WebApplicationFactory<Startup>>
 {
     private readonly HttpClient _client = factory.CreateClient();
 
@@ -13,7 +13,7 @@ public class AuthenticationTests(WebApplicationFactory<Program> factory) : IClas
     public async Task Test_AuthenticatedRequest_WithValidJwt_ReturnsSuccess()
     {
         // Arrange
-        var token = JwtTokenGenerator.GenerateToken("your-very-strong-secret-key", "your-app-name", "your-app-audience");
+        var token = JwtTokenGenerator.GenerateToken("your-very-very-ginormous-very-strong-secret-key", "your-app-name", "your-app-audience");
 
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 

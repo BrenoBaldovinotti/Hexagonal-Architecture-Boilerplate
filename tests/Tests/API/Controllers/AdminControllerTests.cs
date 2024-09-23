@@ -1,15 +1,15 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
+using API;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Tests.Application.Utilities;
 
 namespace Tests.API.Controllers;
 
-public class AdminControllerTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class AdminControllerTests(WebApplicationFactory<Startup> factory) : IClassFixture<WebApplicationFactory<Startup>>
 {
     private readonly HttpClient _client = factory.CreateClient();
-    private readonly string _jwtSecret = "your-secure-secret-key";  // Should match the one in appsettings.json
+    private readonly string _jwtSecret = "your-very-very-ginormous-very-strong-secret-key";  // Should match the one in appsettings.json
     private readonly string _issuer = "your-app-name";  // Should match the one in appsettings.json
     private readonly string _audience = "your-app-audience";    // Should match the one in appsettings.json
 
