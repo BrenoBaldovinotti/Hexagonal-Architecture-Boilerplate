@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Application.Validators;
 
-public static class ApiValidationMessages
+public static class ValidationMessages
 {
     public static string GetPropertyDisplayName<T>(Expression<Func<T, object>> expression)
     {
