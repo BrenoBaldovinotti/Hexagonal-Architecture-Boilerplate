@@ -33,7 +33,6 @@ public class Startup(IConfiguration configuration)
     {
         // Global exception handling middleware
         app.UseMiddleware<GlobalExceptionMiddleware>();
-        app.UseMiddleware<ValidationErrorMiddleware>();
 
         if (env.IsDevelopment())
         {

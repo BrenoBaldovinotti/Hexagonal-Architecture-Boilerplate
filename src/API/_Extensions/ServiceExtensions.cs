@@ -12,6 +12,7 @@ using Application.Security.AuthorizationHandlers;
 using Application.Security.Requirements;
 using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
+using API.Filters;
 
 namespace API._Extensions;
 
@@ -126,7 +127,11 @@ public static class ServiceExtensions
 
     public static IServiceCollection AddCustomControllers(this IServiceCollection services)
     {
-        services.AddControllers();
+        services.AddControllers(options =>
+        {
+            options.Filters.Add<ValidationFilter>();
+        });
+
         return services;
     }
 
