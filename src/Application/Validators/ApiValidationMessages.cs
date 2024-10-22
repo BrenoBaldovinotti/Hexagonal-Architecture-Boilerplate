@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
 
-namespace API.Validators;
+namespace Application.Validators;
 
 public static class ApiValidationMessages
 {
