@@ -23,20 +23,46 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
 
     private static Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        var statusCode = HttpStatusCode.InternalServerError;
-
-        var responseModel = new ApiResponseModel<object>
-        {
-            Status = "error",
-            Message = "An internal server error occurred.",
-            Errors = new Dictionary<string, string[]> { { "Exception", new[] { exception.Message } } },
-            StatusCode = (int)statusCode
-        };
-
-        var result = JsonSerializer.Serialize(responseModel);
         context.Response.ContentType = "application/json";
-        context.Response.StatusCode = (int)statusCode;
 
-        return context.Response.WriteAsync(result);
+        ApiResponseModel<object> response;
+        int statusCode;
+
+        switch (exception)
+        {
+            case ArgumentException argEx:
+                statusCode = (int)HttpStatusCode.BadRequest;
+                response = new ApiResponseModel<object>
+                {
+                    Status = "error",
+                    Message = argEx.Message,
+                    StatusCode = statusCode
+                };
+                break;
+
+            case UnauthorizedAccessException:
+                statusCode = (int)HttpStatusCode.Unauthorized;
+                response = new ApiResponseModel<object>
+                {
+                    Status = "error",
+                    Message = "Unauthorized access.",
+                    StatusCode = statusCode
+                };
+                break;
+
+            default:
+                statusCode = (int)HttpStatusCode.InternalServerError;
+                response = new ApiResponseModel<object>
+                {
+                    Status = "error",
+                    Message = "An unexpected error occurred.",
+                    StatusCode = statusCode
+                };
+                break;
+        }
+
+        context.Response.StatusCode = statusCode;
+        var json = JsonSerializer.Serialize(response);
+        return context.Response.WriteAsync(json);
     }
 }
